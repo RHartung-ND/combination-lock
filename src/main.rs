@@ -1,4 +1,7 @@
 use std::io::{self, Write};
+mod gemini;
+use crate::gemini::optimal_distance;
+use crate::gemini::shortest_spin;
 
 fn naive_avg (num_arr: &Vec<char>, num_digits: usize) -> String {
 
@@ -43,7 +46,6 @@ fn distance (num_arr: &Vec<char>, num_digits: usize) -> String {
             }
         }
             average_distance = average_distance/(num_digits as i32 - 1);
-            println!("{average_distance}");
             let mut res_digit = average_distance + curr_digit;
             if res_digit < 0 {
                 res_digit += 10;
@@ -53,8 +55,6 @@ fn distance (num_arr: &Vec<char>, num_digits: usize) -> String {
 
             result.push_str(&(res_digit).to_string());
     }
-
-    println!("result {result}");
 
     let num_arr: Vec<_> = result.chars().collect();
     let avg = naive_avg(&num_arr, num_digits);
@@ -87,9 +87,36 @@ fn main() {
         return;
     }
 
+    // Algorithm 1: Naive Arithmetic Average
     let avg = naive_avg(&num_arr, num_digits);
-    println!("Your combination using naive average is \"{}\"", avg);
+    println!("Using naive average: \"{}\"", avg);
 
+    // Algorithm 2: Original Pairwise Distance Approach
     let dist = distance(&num_arr, num_digits);
-    println!("Your combination using distance average is \"{}\"", dist);
+    println!("Using distance average: \"{}\"", dist);
+
+    // Algorithm 3: Globally Optimal Minimum Circular Distance O(N)
+    let digits: Vec<u32> = match combo.chars().map(|c| c.to_digit(10)).collect() {
+        Some(vec) => vec,
+        None => {
+            println!("Error: Your combination must contain only integer digits (0-9).");
+            return;
+        }
+    };
+    let (opt_digit, opt_cost) = optimal_distance(&digits);
+    let opt_res = opt_digit.to_string().repeat(digits.len());
+    println!(
+        "Using optimal min-distance: \"{}\"",
+        opt_res
+    );
+
+    println!("=====================");
+    println!("Original | Spin | New");
+    for &digit in &digits {
+        let spin = shortest_spin(digit, opt_digit);
+        println!("{:<8} | {:<4} | {}", digit, spin, opt_digit);
+    }
+    println!("=====================");
+
+    println!("Total spins: {}", opt_cost);
 }
